@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bemuse authentication</title>
+  <style>
+    body { background: #353433; color: #e9e8e7; font: 18px Verdana, sans-serif; }
+    main { position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; text-align: center; }
+  </style>
+</head>
+<body>
+  <main><div>
+    <small style="color: #8b8685">Omachi kudasai</small><br />
+    <div id="status">Loading Auth0 SDK</div>
+    <br />
+    <small style="color: #8b8685">Authentication provided by Auth0</small>
+  </div></main>
+  <script src="https://cdn.auth0.com/js/auth0/8.0.4/auth0.min.js"></script>
+  <script type="text/javascript">
+    var env = location.search.match(/env=production/) ? 'production' : 'staging'
+    var config = {
+      domain: env === 'production'
+        ? 'bemuse.au.auth0.com'
+        : 'bemuse-scoreboard-staging-001.auth0.com',
+      clientID: env === 'production'
+        ? 'XOS0iHs3cwHICkVHwPEJYVHuyyLrETN4'
+        : 'WssUDVmiXYfSRrXXAPpztJ8qW41Dmoeb'
+    }
+    function setStatus (text) {
+      document.getElementById('status').textContent = text
+    }
+    function authorize (state, username, password) {
+      var webAuth = new auth0.WebAuth({
+        domain: config.domain,
+        clientID: config.clientID,
+        responseType: 'token',
+        redirectUri: location.origin + location.pathname + '?mode=callback&env=' + env
+      })
+      setStatus('Now logging in')
+      webAuth.redirect.loginWithCredentials({
+        connection: 'Username-Password-Authentication',
+        username: username,
+        password: password,
+        state: state,
+        scope: 'openid'
+      }, function (err, stuff) {
+        console.log(err, stuff)
+      })
+    }
+    function signup (state, username, email, password) {
+      var webAuth = new auth0.WebAuth({
+        domain: config.domain,
+        clientID: config.clientID
+      })
+      setStatus('Now signing up')
+      webAuth.signup({
+        connection: 'Username-Password-Authentication',
+        username: username,
+        email: email,
+        password: password
+      }, function (err) {
+        if (err) {
+          return
+        }
+        authorize(state, username, password)
+      })
+    }
+    function handleCallback () {
+      var webAuth = new auth0.WebAuth({
+        domain: config.domain,
+        clientID: config.clientID
+      })
+      var result = webAuth.parseHash(window.location.hash, function(err, data) {
+        console.log(err, data)
+      })
+      console.log(result)
+    }
+    function renew () {
+      var webAuth = new auth0.WebAuth({
+        domain: config.domain,
+        clientID: config.clientID
+      })
+      webAuth.renewAuth({
+        audience: config.clientID,
+        scope: 'openid',
+        redirectUri: location.origin + location.pathname + '?mode=callback&env=' + env,
+        usePostMessage: true
+      }, function (err, authResult) {
+        console.log(err, authResult)
+      })
+    }
+    if (location.search.match(/mode=callback/)) {
+      handleCallback()
+      setStatus('Verifying credentials')
+    } else {
+      setStatus('Waiting for host command')
+    }
+  </script>
+</body>
+</html>
