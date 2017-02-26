@@ -1,2 +1,3 @@
 # scoreboard-authentication-pages
-URLs for authentication with Auth0 and stuff (split into another repo for quick iteration in the beginning hahahahahahaha)
+
+This repository hosts HTML pages that will be used for Auth0 callback and will communicate with the parent page/
